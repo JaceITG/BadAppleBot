@@ -9,6 +9,7 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 compressed = None
 
+#Take pixel data from mp4 and grab every 10th frame
 def decode_video():
     global compressed
 
@@ -27,16 +28,12 @@ def as_emojis(frame):
     for r in frame:
         row = []
         for c in r:
+            #grayscale value
             value = c
-            row.append( '⚪' if value < 126 else '⚫' )
+            row.append( '⚫' if value < 126 else '⚪' )
         out.append(row)
-    # for r in range(len(frame[:])):
-    #     for c in range(len(frame[r][:])):
-    #         value = frame[r][c]
-    #         out[r][c] = '⚪' if value < 126 else '⚫'
     
     #append to message string row by row
-
     message = ""
     for r in out:
         message += ''.join(r)
@@ -44,9 +41,6 @@ def as_emojis(frame):
 
     return message
     
-
-
-
 
 @client.event
 async def on_ready():
@@ -68,18 +62,10 @@ async def animate(messages):
 
         frame = as_emojis(f)
 
-        #Print in scanning batches of 2-wait-4-wait-2
-        # for i in range(2):
-        #     await messages[i].edit(content=str(frame[43*i*4:43*(i+1)*4]))
-
-        # await asyncio.sleep(2.5)
-
-        # for i in range(2,6):
-        #     await messages[i].edit(content=str(frame[43*i*4:43*(i+1)*4]))
-
-        # await asyncio.sleep(2.5)
-
+        #Loop through the 8 message parts
         for i in range(8):
+
+            #Pause on 2nd and 6th frames for API ratelimiting
             if i == 2 or i == 6:
                 await asyncio.sleep(2.6)
 
@@ -105,17 +91,15 @@ async def on_message(msg):
             await sent.edit(content='⚫')
             await asyncio.sleep(1)
             await sent.edit(content='⚪')
-
-    if args[0] == "$grid":
-        await channel.send("⚪"*1375)
         
     if args[0] == "$badapple" or args[0] == "$ba":
+        
+        #Print initial frame to grab message part objects
         frame = as_emojis(compressed[2])
         parts = []
         for i in range(8):
             parts.append(await channel.send(frame[43*i*4:43*(i+1)*4]))
         
-        await asyncio.sleep(1)
         await animate(parts)
 
 
